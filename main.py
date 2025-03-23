@@ -1,18 +1,14 @@
 import csv
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_bootstrap import Bootstrap5
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from Cafe_form import CafeForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap5(app)
 
 
-class CafeForm(FlaskForm):
-    cafe = StringField('Cafe name', validators=[DataRequired()])
-    submit = SubmitField('Submit')
+
 
 # Exercise:
 # add: Location URL, open time, closing time, coffee rating, wifi rating, power outlet rating fields
@@ -29,14 +25,23 @@ def home():
     return render_template("index.html")
 
 
-@app.route('/add')
+@app.route('/add', methods=['GET', 'POST'])
 def add_cafe():
     form = CafeForm()
     if form.validate_on_submit():
-        print("True")
-    # Exercise:
-    # Make the form write a new row into cafe-data.csv
-    # with   if form.validate_on_submit()
+        new_cafe = [
+            form.cafe.data,
+            form.location_url.data,
+            form.open_time.data,
+            form.closing_time.data,
+            form.coffee_rating.data,
+            form.wifi_rating.data,
+            form.power_rating.data
+        ]
+        with open("cafe-data.csv", mode="a", newline='\n', encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(new_cafe)
+        return redirect(url_for('cafes'))
     return render_template('add.html', form=form)
 
 
@@ -47,6 +52,7 @@ def cafes():
         list_of_rows = []
         for row in csv_data:
             list_of_rows.append(row)
+        print(list_of_rows)
     return render_template('cafes.html', cafes=list_of_rows)
 
 
